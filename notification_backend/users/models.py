@@ -1,6 +1,7 @@
 from django.db import models
 from timezone_field import TimeZoneField
 from django.core.validators import RegexValidator
+from django.core.exceptions import ValidationError
 
 
 class Client(models.Model):
@@ -29,22 +30,23 @@ class Client(models.Model):
         default='Europe/Moscow',
     )
 
-    def save(self, *args, **kwargs):
-        self.network_code = self.phone_number[1:4]
-        return super(Client, self).save(*args, **kwargs)
+    class Meta:
+        verbose_name = 'Клиент'
+        verbose_name_plural = 'Клиенты'
 
     def __str__(self) -> str:
         return f'Клиент ID: {self.pk}'
 
-    class Meta:
-        verbose_name = 'Клиент'
-        verbose_name_plural = 'Клиенты'
+    def save(self, *args, **kwargs):
+        self.network_code = self.phone_number[1:4]
+        return super(Client, self).save(*args, **kwargs)
 
 
 class NewsLetter(models.Model):
     start_datetime = models.DateTimeField(
         verbose_name='Время запуска рассылки',
         auto_created=True,
+        blank=False,
     )
     text = models.TextField(
         verbose_name='Текст сообщения',
@@ -58,14 +60,20 @@ class NewsLetter(models.Model):
     end_datetime = models.DateTimeField(
         verbose_name='Время окончания рассылки',
         editable=True,
+        blank=False,
     )
-
-    def __str__(self):
-        return f'Рассылка ID: {self.pk}'
 
     class Meta:
         verbose_name = 'Рассылка'
         verbose_name_plural = 'Рассылки'
+
+    def __str__(self):
+        return f'Рассылка ID: {self.pk}'
+
+    def clean(self):
+        super().clean()
+        if self.start_datetime > self.end_datetime:
+            raise ValidationError('Время начала рассылки позже окончания.')
 
 
 class Message(models.Model):
@@ -95,12 +103,12 @@ class Message(models.Model):
         related_name='messages'
     )
 
-    def get_start_newsletter(self):
-        return self.newsletter.start_datetime
+    class Meta:
+        verbose_name = 'Сообщение'
+        verbose_name_plural = 'Сообщения'
 
     def __str__(self) -> str:
         return f'{self.client}; {self.status}; {self.newsletter}'
 
-    class Meta:
-        verbose_name = 'Сообщение'
-        verbose_name_plural = 'Сообщения'
+    def get_start_newsletter(self):
+        return self.newsletter.start_datetime

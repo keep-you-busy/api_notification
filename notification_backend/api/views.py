@@ -1,5 +1,4 @@
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.decorators import action
 from api.serializer import ClientSerializer, NewsLetterSerializer, MessageSerializer
 from users.models import Client, NewsLetter, Message
 
@@ -13,6 +12,7 @@ class ClientViewSet(ModelViewSet):
 class NewsLetterViewSet(ModelViewSet):
     queryset = NewsLetter.objects.all()
     serializer_class = NewsLetterSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
 
 class MessageViewSet(ModelViewSet):

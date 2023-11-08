@@ -1,17 +1,27 @@
 from django.db import models
-from phonenumber_field.modelfields import PhoneNumberField
 from timezone_field import TimeZoneField
+from django.core.validators import RegexValidator
 
 
 class Client(models.Model):
-    phone_number = PhoneNumberField(
-        verbose_name='Номер телефона',
+    phone_regex = RegexValidator(
+                regex=r'^7\d{10}$',
+            )
+    phone_number = models.CharField(
+        verbose_name='Телефон',
+        validators=[
+            phone_regex
+        ],
         unique=True,
-        blank=False,
-        region='RU')
+        max_length=11)
     tag = models.CharField(
         verbose_name='Произвольная метка',
         max_length=50,
+        blank=True
+    )
+    network_code = models.CharField(
+        verbose_name='Код оператора',
+        max_length=3,
         blank=True
     )
     time_zone = TimeZoneField(
@@ -19,12 +29,16 @@ class Client(models.Model):
         default='Europe/Moscow',
     )
 
-    @property
-    def network_code(self):
-        return self.phone_number.as_e164[2:5]
+    def save(self, *args, **kwargs):
+        self.network_code = self.phone_number[1:4]
+        return super(Client, self).save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f'[Client: {self.pk}; Number: {self.phone_number}]'
+        return f'Клиент ID: {self.pk}'
+
+    class Meta:
+        verbose_name = 'Клиент'
+        verbose_name_plural = 'Клиенты'
 
 
 class NewsLetter(models.Model):
@@ -35,15 +49,19 @@ class NewsLetter(models.Model):
     text = models.TextField(
         verbose_name='Текст сообщения',
     )
-    client_operator_code = models.CharField(max_length=3)
-    client_tag = models.CharField(max_length=50)
+    clients = models.ManyToManyField(
+        Client,
+        through='Message',
+        verbose_name='Клиенты рассылки',
+        related_name='newsletters',
+    )
     end_datetime = models.DateTimeField(
         verbose_name='Время окончания рассылки',
         editable=True,
     )
 
     def __str__(self):
-        return f'[Newsletter: {self.pk}; Start: {self.start_newsletter}]'
+        return f'Рассылка ID: {self.pk}'
 
     class Meta:
         verbose_name = 'Рассылка'
@@ -51,35 +69,37 @@ class NewsLetter(models.Model):
 
 
 class Message(models.Model):
-    SENT = "Отправлено"
-    NO_SENT = "Не отправлено"
+    SENT = 'ОТПРАВЛЕНО'
+    NOT_SENT = 'НЕ ОТПРАВЛЕНО'
 
     STATUS_CHOICES = [
-        (SENT, "Отправлено"),
-        (NO_SENT, "Не отправлено"),
+        (SENT, 'Отправлено'),
+        (NOT_SENT, 'Не отправлено'),
     ]
 
-    start_newsletter = models.DateTimeField(
-        verbose_name='Время запуска рассылки',
-        auto_created=True,
-    )
-    status = models.BooleanField(
+    status = models.CharField(
         verbose_name='Статус отправки',
-        choices=STATUS_CHOICES
+        choices=STATUS_CHOICES,
+        default=NOT_SENT,
     )
     newsletter = models.ForeignKey(
         NewsLetter,
+        verbose_name='Рассылка',
         on_delete=models.CASCADE,
         related_name='messages'
     )
     client = models.ForeignKey(
         Client,
+        verbose_name='Клиент',
         on_delete=models.CASCADE,
         related_name='messages'
     )
 
-    def __str__(self):
-        return f'[Message: {self.pk}; Status: {self.status}]'
+    def get_start_newsletter(self):
+        return self.newsletter.start_datetime
+
+    def __str__(self) -> str:
+        return f'{self.client}; {self.status}; {self.newsletter}'
 
     class Meta:
         verbose_name = 'Сообщение'

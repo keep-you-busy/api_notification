@@ -50,6 +50,7 @@ class NewsLetter(models.Model):
     )
     text = models.TextField(
         verbose_name='Текст сообщения',
+        blank=False
     )
     clients = models.ManyToManyField(
         Client,

@@ -1,6 +1,7 @@
 from rest_framework.viewsets import ModelViewSet
-from api.serializer import ClientSerializer, NewsLetterSerializer, MessageSerializer
+from api.serializer import ClientSerializer, NewsLetterSerializer, NewsLetterCreateSerializer, MessageSerializer
 from users.models import Client, NewsLetter, Message
+from rest_framework.permissions import SAFE_METHODS
 
 
 class ClientViewSet(ModelViewSet):
@@ -12,7 +13,16 @@ class ClientViewSet(ModelViewSet):
 class NewsLetterViewSet(ModelViewSet):
     queryset = NewsLetter.objects.all()
     serializer_class = NewsLetterSerializer
-    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def get_serializer_class(self):
+        method = self.request.method
+        if method in SAFE_METHODS:
+            self.serializer_class = NewsLetterSerializer
+        elif method == 'POST':
+            self.serializer_class = NewsLetterCreateSerializer
+        elif method == 'PATCH':
+            self.serializer_class = NewsLetterCreateSerializer
+        return self.serializer_class
 
 
 class MessageViewSet(ModelViewSet):

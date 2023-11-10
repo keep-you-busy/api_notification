@@ -72,9 +72,9 @@ class NewsLetter(models.Model):
         return f'Рассылка ID: {self.pk}'
 
     def clean(self):
-        super().clean()
         if self.start_datetime > self.end_datetime:
             raise ValidationError('Время начала рассылки позже окончания.')
+        super().clean()
 
 
 class Message(models.Model):
@@ -110,6 +110,3 @@ class Message(models.Model):
 
     def __str__(self) -> str:
         return f'{self.client}; {self.status}; {self.newsletter}'
-
-    def get_start_newsletter(self):
-        return self.newsletter.start_datetime

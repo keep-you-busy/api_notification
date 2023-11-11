@@ -28,6 +28,7 @@ class Client(models.Model):
     time_zone = TimeZoneField(
         verbose_name='Часовой пояс',
         default='Europe/Moscow',
+        use_pytz=True,
     )
 
     class Meta:

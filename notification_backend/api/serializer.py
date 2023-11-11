@@ -1,8 +1,9 @@
 import pytz
 from rest_framework import serializers
 
-from users.models import Client, NewsLetter
+from users.models import Client, NewsLetter, Message
 from api.utils import set_clients_values, update_or_create_newsletter
+from api.tasks import send_message
 
 
 class ClientSerializer(serializers.ModelSerializer):
@@ -76,10 +77,18 @@ class NewsLetterCreateSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
     def create(self, validated_data):
-        return update_or_create_newsletter(validated_data)
+        newsletter = update_or_create_newsletter(validated_data)
+        messages = Message.objects.filter(newsletter__id__in=newsletter)
+        for message in messages:
+            send_message(message)
+        return newsletter
 
     def update(self, instance, validated_data):
-        return update_or_create_newsletter(validated_data, instance)
+        newsletter = update_or_create_newsletter(validated_data, instance)
+        messages = Message.objects.filter(newsletter__id__in=newsletter)
+        for message in messages:
+            send_message(message)
+        return newsletter
 
     def to_representation(self, instance):
         newsletter_serializer = NewsLetterSerializer(instance,

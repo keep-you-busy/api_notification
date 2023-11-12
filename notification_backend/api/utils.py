@@ -1,6 +1,3 @@
-from rest_framework.response import Response
-from rest_framework import status
-
 from users.models import NewsLetter, Client
 
 
@@ -38,19 +35,15 @@ def update_or_create_newsletter(validated_data, instance=None):
 
 def retrieve_messages_statistic(messsages):
     """Возвращает статистику по сообщениям."""
-    if messsages.exists():
-        total_messages = messsages.count()
-        recieved_messages = messsages.filter(
-            status='ОТПРАВЛЕНО').count()
-        awaiting_messages = messsages.filter(
-            status='НЕ ОТПРАВЛЕНО').count()
-        response = {
-            'total messages': total_messages,
-            'recieved messages': recieved_messages,
-            'awaiting messages': awaiting_messages,
-        }
-    else:
-        return Response({'error': 'not found'},
-                        status=status.HTTP_400_BAD_REQUEST)
+    total_messages = messsages.count()
+    recieved_messages = messsages.filter(
+        status='ОТПРАВЛЕНО').count()
+    awaiting_messages = messsages.filter(
+        status='НЕ ОТПРАВЛЕНО').count()
+    response = {
+        'total messages': total_messages,
+        'recieved messages': recieved_messages,
+        'awaiting messages': awaiting_messages,
+    }
 
     return response

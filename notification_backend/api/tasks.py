@@ -4,42 +4,35 @@ from requests.exceptions import RequestException
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from django.conf import settings
 
-from users.models import Message, NewsLetter, Client
 
-token = 'ksk'
-url = 'url'
+URL = 'https://probe.fbrq.cloud/v1/send/'
 
 
 logger = get_task_logger(__name__)
 
 
-@shared_task(bind=True)
+@shared_task(bind=True, autoretry_for=(RequestException,), retry_backoff=True, serializer='pickle')
 def send_message(self, message):
-    client_time_zone = message.client.time_zone
-    now_time = datetime.now(client_time_zone)
-    if message.newsletter.start_datetime <= now_time <= message.newsletter.end_datetime:
+    client_now_time = datetime.now(message.client.time_zone)
+    if message.newsletter.start_datetime <= client_now_time <= message.newsletter.end_datetime:
         data = {
-        'id': message.pk,
-        'phone': message.client.phone_number,
-        'text': message.newsletter.text,
-        }   
+            'id': message.pk,
+            'phone': message.client.phone_number,
+            'text': message.newsletter.text,
+        }
         header = {
-            'Authorization': f'Bearer {token}',
+            'Authorization': f'Bearer {settings.PROBE_TOKEN}',
             'Content-Type': 'application/json',
         }
         try:
-            post(url=url + str(message.pk), headers=header, json=data)
+            response = post(url=URL + str(message.pk),
+                            headers=header, json=data)
+            response.raise_for_status()
         except RequestException as error:
             logger.error(f'Ошибка в сообщении {message.pk}: {error}')
-            raise self.retry(error)
         else:
-            logger.info(f'Сообщение {message.pk}: Доставлено')
-            message.update(status='ОТПРАВЛЕНО')
-    else:
-        time = 24 - (int(now_time.time().strftime('%H:%M:%S')[:2]) - int(message.newsletter.start_datetime.strftime('%H:%M:%S')[:2]))
-        logger.info(
-            f'Сообщение: {message.pk}, '
-            f'Повторить через: {60 * 60 * time} сек'
-        )
-        return self.retry(countdown=60 * 60 * time)
+            logger.info(f'Сообщение {message.pk}: Отправлено')
+            message.status = 'ОТПРАВЛЕНО'
+            message.save(update_fields=['status'])

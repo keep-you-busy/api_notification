@@ -78,16 +78,16 @@ class NewsLetterCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         newsletter = update_or_create_newsletter(validated_data)
-        messages = Message.objects.filter(newsletter__id__in=newsletter)
+        messages = Message.objects.filter(newsletter=newsletter)
         for message in messages:
-            send_message(message)
+            send_message.delay(message)
         return newsletter
 
     def update(self, instance, validated_data):
         newsletter = update_or_create_newsletter(validated_data, instance)
-        messages = Message.objects.filter(newsletter__id__in=newsletter)
+        messages = Message.objects.filter(newsletter=newsletter)
         for message in messages:
-            send_message(message)
+            send_message.delay(message)
         return newsletter
 
     def to_representation(self, instance):

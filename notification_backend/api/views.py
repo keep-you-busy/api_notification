@@ -35,18 +35,26 @@ class NewsLetterViewSet(ModelViewSet):
             url_path='statistic',
             url_name='statistic')
     def get_statistic(self, request):
-        response = retrieve_messages_statistic(
-            Message.objects)
-        response['total_newsletters'] = NewsLetter.objects.count()
-
-        return Response(response, status=status.HTTP_200_OK)
+        messages = Message.objects
+        if messages.exists():
+            response = retrieve_messages_statistic(
+                messages)
+            response['total_newsletters'] = NewsLetter.objects.count()
+            return Response(response, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'not found'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=('GET',),
             detail=True,
             url_path='statistic',
             url_name='statistic')
     def get_detailed_statistic(self, request, pk):
-        response = retrieve_messages_statistic(
-            Message.objects.filter(newsletter=pk))
-
-        return Response(response, status=status.HTTP_200_OK)
+        messages = Message.objects.filter(newsletter=pk)
+        if messages.exists():
+            response = retrieve_messages_statistic(
+                messages)
+            return Response(response, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'not found'},
+                            status=status.HTTP_400_BAD_REQUEST)

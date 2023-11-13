@@ -70,3 +70,5 @@ python manage.py runserver
 ```
 
 По адресу /docs/ открывается страница со Swagger UI, где описание разработанного API.
+
+**Примечание: в файле .env обязательно должны быть заданы PROBE_TOKEN и PROBE_URL.

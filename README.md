@@ -26,12 +26,13 @@
 5. Создайте суперпользователя:
 
     ```bash
+    cd notification_backend
     python manage.py createsuperuser
     ```
 
 ## Настройка базы данных
 
-1. Убедитесь, что у вас установлен PostgreSQL [https://www.postgresql.org/download/]:
+1. Убедитесь, что у вас установлен [PostgreSQL](https://www.postgresql.org/download/):
 
 2. Создайте базу данных (пример в example.env):
 
@@ -45,9 +46,13 @@
 
 ## Настройка Redis
 
-1. Убедитесь, что у вас установлен Redis [https://redis.io/docs/install/install-redis/].
+1. Убедитесь, что у вас установлен [Redis](https://redis.io/docs/install/install-redis/).
 
 2. Запустите Redis на порту 6379.
+
+    ```bash
+    docker run -d -p 6379:6379 redis
+    ```
 
 ## Настройка Celery
 

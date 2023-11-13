@@ -7,9 +7,6 @@ from celery.utils.log import get_task_logger
 from django.conf import settings
 
 
-URL = 'https://probe.fbrq.cloud/v1/send/'
-
-
 logger = get_task_logger(__name__)
 
 
@@ -27,7 +24,7 @@ def send_message(self, message):
             'Content-Type': 'application/json',
         }
         try:
-            response = post(url=URL + str(message.pk),
+            response = post(url=settings.PROBE_URL + str(message.pk),
                             headers=header, json=data)
             response.raise_for_status()
         except RequestException as error:

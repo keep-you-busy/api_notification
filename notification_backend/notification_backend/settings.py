@@ -11,12 +11,12 @@ load_dotenv()
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django_secret_key')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django_secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', True)
+DEBUG = os.environ.get('DEBUG', True)
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1, localhost').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1, localhost').split(',')
 
 
 # Application definition
@@ -126,12 +126,13 @@ REST_FRAMEWORK = {
     'DATETIME_INPUT_FORMATS': ['%m/%d/%Y %H:%M:%S'],
 }
 
-PROBE_TOKEN = os.getenv('PROBE_SERVER')
+PROBE_TOKEN = os.environ.get('PROBE_TOKEN')
+PROBE_URL = os.environ.get('PROBE_URL')
 
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_ENABLE_UTC = True
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://redis:6379/0")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379/0")
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER", "redis://0.0.0.0:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://0.0.0.0:6379/0")
 CELERY_SEND_TASK_SENT_EVENT = True
 CELERY_TASK_SERIALIZER = 'pickle'
 CELERY_RESULT_SERIALIZER = 'pickle'
